@@ -1,0 +1,32 @@
+{
+  "name": "cordova-plugin-alert",
+  "version": "0.1.0",
+  "description": "Display platform-specific modal dialogs in your cordova app",
+  "cordova": {
+    "id": "cordova-plugin-alert",
+    "platforms": [
+      "ios",
+      "android"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chemerisuk/cordova-plugin-alert.git"
+  },
+  "author": "Maksim Chemerisuk <chemerisuk@gmail.com> (https://github.com/chemerisuk)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chemerisuk/cordova-plugin-alert/issues"
+  },
+  "homepage": "https://github.com/chemerisuk/cordova-plugin-alert#readme",
+  "keywords": [
+    "cordova",
+    "alert",
+    "confirm",
+    "prompt",
+    "dialogs",
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-ios"
+  ]
+}
