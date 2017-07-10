@@ -1,9 +1,15 @@
 package by.chemerisuk.cordova;
 
+import java.util.Arrays;
+import android.util.Log;
+
 import android.app.Activity;
+import android.view.View;
+import android.view.WindowManager.LayoutParams;
+import android.widget.EditText;
 import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
-import android.util.Log;
+import android.support.v7.widget.AppCompatEditText;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
@@ -28,31 +34,59 @@ public class AlertPlugin extends CordovaPlugin {
     }
 
     private void show(JSONObject settings, final CallbackContext callbackContext) throws JSONException {
-        AlertDialog.Builder dlg = new AlertDialog.Builder(this.webView.getContext());
+        AlertDialog.Builder dlg = new AlertDialog.Builder(cordova.getActivity());
         dlg.setMessage(settings.getString("message"));
         dlg.setTitle(settings.optString("title", ""));
         dlg.setCancelable(true);
 
-        JSONArray actions = settings.getJSONArray("actions");
-        DialogInterface.OnClickListener clickListener = new DialogInterface.OnClickListener() {
+        EditText textView = null;
+        JSONArray inputs = settings.optJSONArray("inputs");
+        if (inputs != null) {
+            JSONObject inputSettings = inputs.getJSONObject(0);
+            textView = new AppCompatEditText(cordova.getActivity());
+            textView.setInputType(inputSettings.getInt("type"));
+            textView.setHint(inputSettings.optString("hint"));
+
+            dlg.setView(textView);
+        }
+
+        final EditText textViewFinal = textView;
+        final DialogInterface.OnClickListener clickListener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                callbackContext.success(-which);
+                if (textViewFinal == null) {
+                    callbackContext.success(-which);
+                } else {
+                    callbackContext.success(new JSONArray(
+                        Arrays.asList(-which, textViewFinal.getText())));
+                }
             }
         };
 
+        JSONArray actions = settings.getJSONArray("actions");
         for (int i = 0, n = actions.length(); i < n; ++i) {
-            String message = actions.getString(i);
+            String title = actions.getString(i);
 
-            if (n - i == 1) {
-                dlg.setPositiveButton(message, clickListener);
-            } else if (n - i == 2) {
-                dlg.setNegativeButton(message, clickListener);
+            if (i == 0) {
+                dlg.setPositiveButton(title, clickListener);
+            } else if (i == 1) {
+                dlg.setNegativeButton(title, clickListener);
             } else {
-                dlg.setNeutralButton(message, clickListener);
+                dlg.setNeutralButton(title, clickListener);
             }
         }
 
-        dlg.show();
+        final AlertDialog alertDialog = dlg.show();
+
+        if (textView != null) {
+            textView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View viev, boolean hasFocus) {
+                    if (hasFocus) {
+                        alertDialog.getWindow().setSoftInputMode(LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+                    }
+                }
+            });
+        }
     }
 }
