@@ -14,6 +14,10 @@ function AlertBuilder(message, title, theme) {
 
 AlertBuilder.prototype = {
     addAction: function(title) {
+        if (arguments.length > 1) {
+            title = Array.prototype.slice.call(arguments, 0);
+        }
+
         if (Array.isArray(title)) {
             title.push.apply(this.actions, title);
         } else if (title) {
@@ -38,7 +42,7 @@ AlertBuilder.prototype = {
         var inputType = 1;
 
         if (isIOS) {
-            inputType = 0;
+            inputType = 0; // UIKeyboardTypeDefault
         } else if (config && config.multiline) {
             inputType = 16385 | 131072;
         }
@@ -49,7 +53,7 @@ AlertBuilder.prototype = {
         var inputType = 2;
 
         if (isIOS) {
-            inputType = 4;
+            inputType = 4; // UIKeyboardTypeNumberPad
         } else if (config && config.decimal) {
             inputType |= 4096 | 8192;
         }
@@ -57,14 +61,22 @@ AlertBuilder.prototype = {
         return this.addInput(inputType, config);
     },
     addPhoneInput: function(config) {
-        return this.addInput(isIOS ? 5 : 3, config);
+        var inputType = 3;
+
+        if (isIOS) {
+            inputType = 5; // UIKeyboardTypePhonePad
+        }
+
+        return this.addInput(inputType, config);
     },
     show: function(success, error) {
         exec(function(args) {
-            if (Array.isArray(args)) {
-                success.apply(this, args);
-            } else {
-                success(args);
+            if (typeof success === "function") {
+                if (Array.isArray(args)) {
+                    success.apply(null, args);
+                } else {
+                    success(args);
+                }
             }
         }, error, PLUGIN_NAME, "show", [this]);
 
