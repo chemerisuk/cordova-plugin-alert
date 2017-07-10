@@ -34,7 +34,15 @@ public class AlertPlugin extends CordovaPlugin {
     }
 
     private void show(JSONObject settings, final CallbackContext callbackContext) throws JSONException {
-        AlertDialog.Builder dlg = new AlertDialog.Builder(cordova.getActivity());
+        AlertDialog.Builder dlg;
+        int dlgTheme = settings.optInt("theme", 0);
+
+        if (dlgTheme > 0) {
+            dlg = new AlertDialog.Builder(cordova.getActivity(), dlgTheme);
+        } else {
+            dlg = new AlertDialog.Builder(cordova.getActivity());
+        }
+
         dlg.setMessage(settings.getString("message"));
         dlg.setTitle(settings.optString("title", ""));
         dlg.setCancelable(true);

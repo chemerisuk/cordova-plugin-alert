@@ -5,9 +5,10 @@ var isIOS = cordova.platformId === "ios";
 // https://developer.android.com/reference/android/text/InputType.html
 // https://developer.apple.com/library/ios/documentation/UIKit/Reference/UITextInputTraits_Protocol/#//apple_ref/c/tdef/UIKeyboardType
 
-function AlertBuilder(message, title) {
+function AlertBuilder(message, title, theme) {
     this.message = message;
     this.title = title;
+    this.theme = theme;
     this.actions = [];
 }
 
@@ -76,7 +77,7 @@ AlertBuilder.prototype = {
 };
 
 module.exports = {
-    create: function(message, title) {
-        return new AlertBuilder(message, title);
+    create: function(message, title, theme) {
+        return new AlertBuilder(message, title, theme);
     }
 };
