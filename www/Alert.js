@@ -16,7 +16,7 @@ AlertBuilder.prototype = {
     addAction: function(title) {
         if (Array.isArray(title)) {
             title.push.apply(this.actions, title);
-        } else {
+        } else if (title) {
             this.actions.push(title);
         }
 
@@ -60,10 +60,6 @@ AlertBuilder.prototype = {
         return this.addInput(isIOS ? 5 : 3, config);
     },
     show: function(success, error) {
-        if (!this.actions.length) {
-            this.actions.push("OK");
-        }
-
         exec(function(args) {
             if (Array.isArray(args)) {
                 success.apply(this, args);

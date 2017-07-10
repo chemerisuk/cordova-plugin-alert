@@ -1,5 +1,7 @@
 package by.chemerisuk.cordova;
 
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Arrays;
 import android.util.Log;
 
@@ -43,23 +45,40 @@ public class AlertPlugin extends CordovaPlugin {
             dlg = new AlertDialog.Builder(cordova.getActivity());
         }
 
-        dlg.setMessage(settings.getString("message"));
-        dlg.setTitle(settings.optString("title", ""));
         dlg.setCancelable(true);
+        dlg.setTitle(settings.optString("title", ""));
 
         EditText textView = null;
-        JSONArray inputs = settings.optJSONArray("inputs");
-        if (inputs != null) {
-            JSONObject inputSettings = inputs.getJSONObject(0);
-            textView = new AppCompatEditText(cordova.getActivity());
-            textView.setInputType(inputSettings.getInt("type"));
-            textView.setHint(inputSettings.optString("hint"));
+        JSONArray items = settings.optJSONArray("message");
+        if (items != null) {
+            final String[] itemsArray = new String[items.length()];
+            for (int i = 0; i < items.length(); ++i) {
+                itemsArray[i] = items.getString(i);
+            }
 
-            dlg.setView(textView);
+            dlg.setItems(itemsArray, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    callbackContext.success(new JSONArray(
+                        Arrays.asList(which + 1, itemsArray[which])));
+                }
+            });
+        } else {
+            dlg.setMessage(settings.getString("message"));
+
+            JSONArray inputs = settings.optJSONArray("inputs");
+            if (inputs != null) {
+                JSONObject inputSettings = inputs.getJSONObject(0);
+                textView = new AppCompatEditText(cordova.getActivity());
+                textView.setInputType(inputSettings.getInt("type"));
+                textView.setHint(inputSettings.optString("hint"));
+
+                dlg.setView(textView);
+            }
         }
 
         final EditText textViewFinal = textView;
-        final DialogInterface.OnClickListener clickListener = new DialogInterface.OnClickListener() {
+        DialogInterface.OnClickListener clickListener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (textViewFinal == null) {
