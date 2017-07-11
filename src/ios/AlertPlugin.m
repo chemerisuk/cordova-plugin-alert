@@ -4,6 +4,8 @@
 
 - (void)show:(CDVInvokedUrlCommand *)command {
     NSDictionary* options = [command argumentAtIndex:0];
+    NSString *title = options[@"title"] ?: nil;
+    NSString *message = options[@"message"] ?: nil;
     NSArray* actions = options[@"actions"];
 
     UIAlertController *alertController = [UIAlertController
@@ -22,7 +24,7 @@
         ]];
     }
 
-    [self.getTopPresentedViewController presentViewController:alertController animated:YES completion:NULL];
+    [self.viewController presentViewController:alertController animated:YES completion:NULL];
 }
 
 @end
