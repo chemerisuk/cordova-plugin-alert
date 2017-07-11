@@ -5,13 +5,15 @@ var isIOS = cordova.platformId === "ios";
 // https://developer.android.com/reference/android/text/InputType.html
 // https://developer.apple.com/library/ios/documentation/UIKit/Reference/UITextInputTraits_Protocol/#//apple_ref/c/tdef/UIKeyboardType
 
-function AlertBuilder(message, title, theme) {
+function AlertBuilder(message, title, type) {
     this.message = message;
     this.title = title;
-    this.theme = theme;
     this.actions = [];
+    this.type = type;
 }
 
+AlertBuilder.TYPE_SHEET = "sheet";
+AlertBuilder.TYPE_DIALOG = "dialog";
 AlertBuilder.getCurrentTheme = function() { return 0; };
 
 AlertBuilder.prototype = {
@@ -72,6 +74,10 @@ AlertBuilder.prototype = {
         return this.addInput(inputType, config);
     },
     show: function(success, error) {
+        var methodName = "show" + this.type[0].toUpperCase() + this.type.slice(1);
+
+        this.theme = AlertBuilder.getCurrentTheme();
+
         exec(function(args) {
             if (typeof success === "function") {
                 if (Array.isArray(args)) {
@@ -80,15 +86,18 @@ AlertBuilder.prototype = {
                     success(args);
                 }
             }
-        }, error, PLUGIN_NAME, "show", [this]);
+        }, error, PLUGIN_NAME, methodName, [this]);
 
         return this;
     }
 };
 
 module.exports = {
-    create: function(message, title) {
-        return new AlertBuilder(message, title, AlertBuilder.getCurrentTheme());
+    createDialog: function(message, title) {
+        return new AlertBuilder(message, title, AlertBuilder.TYPE_DIALOG);
+    },
+    createSheet: function(items, title) {
+        return new AlertBuilder(items, title, AlertBuilder.TYPE_SHEET);
     },
     setTheme: function(theme) {
         if (typeof theme === "function") {
