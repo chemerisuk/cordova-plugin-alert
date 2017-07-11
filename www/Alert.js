@@ -9,6 +9,7 @@ function AlertBuilder(message, title, type) {
     this.message = message;
     this.title = title;
     this.actions = [];
+    this.options = [];
     this.type = type;
 }
 
@@ -17,6 +18,17 @@ AlertBuilder.TYPE_DIALOG = "dialog";
 AlertBuilder.getCurrentTheme = function() { return 0; };
 
 AlertBuilder.prototype = {
+    addOption: function(title) {
+        if (!Array.isArray(title)) {
+            title = Array.prototype.slice.call(arguments, 0);
+        }
+
+        if (Array.isArray(title)) {
+            title.push.apply(this.options, title);
+        } else if (title) {
+            this.options.push(title);
+        }
+    },
     addAction: function(title) {
         if (arguments.length > 1) {
             title = Array.prototype.slice.call(arguments, 0);
@@ -96,8 +108,8 @@ module.exports = {
     createDialog: function(message, title) {
         return new AlertBuilder(message, title, AlertBuilder.TYPE_DIALOG);
     },
-    createSheet: function(items, title) {
-        return new AlertBuilder(items, title, AlertBuilder.TYPE_SHEET);
+    createSheet: function(message, title) {
+        return new AlertBuilder(message, title, AlertBuilder.TYPE_SHEET);
     },
     setTheme: function(theme) {
         if (typeof theme === "function") {

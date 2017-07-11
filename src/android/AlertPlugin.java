@@ -41,19 +41,21 @@ public class AlertPlugin extends CordovaPlugin {
 
     private void showSheet(JSONObject settings, final CallbackContext callbackContext) throws JSONException {
         AlertDialog.Builder dlg = createBuilder(settings);
+        // only title is available, so use message field
+        dlg.setTitle(settings.optString("message", ""));
 
-        JSONArray items = settings.getJSONArray("message");
-        final String[] itemsArray = new String[items.length()];
-        for (int i = 0; i < items.length(); ++i) {
-            itemsArray[i] = items.getString(i);
+        JSONArray options = settings.getJSONArray("options");
+        final String[] optionsArray = new String[options.length()];
+        for (int i = 0; i < options.length(); ++i) {
+            optionsArray[i] = options.getString(i);
         }
 
-        dlg.setItems(itemsArray, new DialogInterface.OnClickListener() {
+        dlg.setItems(optionsArray, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 JSONArray result = new JSONArray();
                 result.put(which + 1);
-                result.put(itemsArray[which]);
+                result.put(optionsArray[which]);
                 sendResult(result, callbackContext);
             }
         });
@@ -73,6 +75,7 @@ public class AlertPlugin extends CordovaPlugin {
 
     private void showDialog(JSONObject settings, final CallbackContext callbackContext) throws JSONException {
         AlertDialog.Builder dlg = createBuilder(settings);
+        dlg.setTitle(settings.optString("title", ""));
         dlg.setMessage(settings.getString("message"));
 
         JSONArray inputs = settings.optJSONArray("inputs");
@@ -136,7 +139,6 @@ public class AlertPlugin extends CordovaPlugin {
         }
 
         builder.setCancelable(true);
-        builder.setTitle(settings.optString("title", ""));
 
         return builder;
     }
