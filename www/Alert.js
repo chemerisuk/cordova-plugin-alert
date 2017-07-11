@@ -12,6 +12,8 @@ function AlertBuilder(message, title, theme) {
     this.actions = [];
 }
 
+AlertBuilder.getCurrentTheme = function() { return 0; };
+
 AlertBuilder.prototype = {
     addAction: function(title) {
         if (arguments.length > 1) {
@@ -85,7 +87,16 @@ AlertBuilder.prototype = {
 };
 
 module.exports = {
-    create: function(message, title, theme) {
-        return new AlertBuilder(message, title, theme);
+    create: function(message, title) {
+        return new AlertBuilder(message, title, AlertBuilder.getCurrentTheme());
+    },
+    setTheme: function(theme) {
+        if (typeof theme === "function") {
+            AlertBuilder.getCurrentTheme = theme;
+        } else if (typeof theme === "number") {
+            AlertBuilder.getCurrentTheme = function() { return theme; };
+        } else {
+            throw new TypeError("theme can be only number or a functor");
+        }
     }
 };
