@@ -2,6 +2,7 @@
 
 @interface AlertPlugin : CDVPlugin
 
-- (void)show:(CDVInvokedUrlCommand *)command;
+- (void)showDialog:(CDVInvokedUrlCommand *)command;
+- (void)showSheet:(CDVInvokedUrlCommand *)command;
 
 @end
