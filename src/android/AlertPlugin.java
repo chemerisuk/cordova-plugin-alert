@@ -6,10 +6,12 @@ import java.util.Arrays;
 import android.util.Log;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.view.View;
 import android.view.WindowManager.LayoutParams;
 import android.widget.EditText;
-import android.content.DialogInterface;
+import android.widget.TextView;
+import android.os.Build;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.AppCompatEditText;
 
@@ -48,9 +50,11 @@ public class AlertPlugin extends CordovaPlugin {
         dlg.setCancelable(true);
         dlg.setTitle(settings.optString("title", ""));
 
-        EditText textView = null;
+        final EditText textView;
         JSONArray items = settings.optJSONArray("message");
         if (items != null) {
+            textView = null;
+
             final String[] itemsArray = new String[items.length()];
             for (int i = 0; i < items.length(); ++i) {
                 itemsArray[i] = items.getString(i);
@@ -67,25 +71,24 @@ public class AlertPlugin extends CordovaPlugin {
             dlg.setMessage(settings.getString("message"));
 
             JSONArray inputs = settings.optJSONArray("inputs");
-            if (inputs != null) {
-                JSONObject inputSettings = inputs.getJSONObject(0);
-                textView = new AppCompatEditText(cordova.getActivity());
-                textView.setInputType(inputSettings.getInt("type"));
-                textView.setHint(inputSettings.optString("hint"));
+            if (inputs == null) {
+                textView = null;
+            } else {
+                // handle only first input for now
+                textView = createInput(inputs.getJSONObject(0));
 
                 dlg.setView(textView);
             }
         }
 
-        final EditText textViewFinal = textView;
         DialogInterface.OnClickListener clickListener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if (textViewFinal == null) {
+                if (textView == null) {
                     callbackContext.success(-which);
                 } else {
                     callbackContext.success(new JSONArray(
-                        Arrays.asList(-which, textViewFinal.getText())));
+                        Arrays.asList(-which, textView.getText().toString())));
                 }
             }
         };
@@ -104,8 +107,18 @@ public class AlertPlugin extends CordovaPlugin {
         }
 
         final AlertDialog alertDialog = dlg.show();
+        final TextView messageView = (TextView)alertDialog.findViewById(android.R.id.message);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            messageView.setTextDirection(View.TEXT_DIRECTION_LOCALE);
+        }
+
+        alertDialog.setCanceledOnTouchOutside(false);
 
         if (textView != null) {
+            // fix text color for a dark theme
+            textView.setTextColor(messageView.getTextColors());
+            // set focus on the first input and show keyboard
             textView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
                 @Override
                 public void onFocusChange(View viev, boolean hasFocus) {
@@ -115,5 +128,13 @@ public class AlertPlugin extends CordovaPlugin {
                 }
             });
         }
+    }
+
+    private EditText createInput(JSONObject settings) throws JSONException {
+        EditText input = new AppCompatEditText(cordova.getActivity());
+        input.setInputType(settings.getInt("type"));
+        input.setHint(settings.optString("hint"));
+
+        return input;
     }
 }
