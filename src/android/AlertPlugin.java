@@ -2,7 +2,6 @@ package by.chemerisuk.cordova;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
 import android.util.Log;
 
 import android.app.Activity;
@@ -14,6 +13,7 @@ import android.widget.TextView;
 import android.os.Build;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.AppCompatEditText;
+import android.support.v7.widget.LinearLayoutCompat;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
@@ -50,11 +50,9 @@ public class AlertPlugin extends CordovaPlugin {
         dlg.setCancelable(true);
         dlg.setTitle(settings.optString("title", ""));
 
-        final EditText textView;
+        final List<TextView> inputControls = new ArrayList<TextView>();
         JSONArray items = settings.optJSONArray("message");
         if (items != null) {
-            textView = null;
-
             final String[] itemsArray = new String[items.length()];
             for (int i = 0; i < items.length(); ++i) {
                 itemsArray[i] = items.getString(i);
@@ -63,33 +61,40 @@ public class AlertPlugin extends CordovaPlugin {
             dlg.setItems(itemsArray, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    callbackContext.success(new JSONArray(
-                        Arrays.asList(which + 1, itemsArray[which])));
+                    JSONArray result = new JSONArray();
+                    result.put(which + 1);
+                    result.put(itemsArray[which]);
+                    sendResult(result, callbackContext);
                 }
             });
         } else {
             dlg.setMessage(settings.getString("message"));
 
             JSONArray inputs = settings.optJSONArray("inputs");
-            if (inputs == null) {
-                textView = null;
-            } else {
-                // handle only first input for now
-                textView = createInput(inputs.getJSONObject(0));
+            if (inputs != null) {
+                LinearLayoutCompat layout = new LinearLayoutCompat(cordova.getActivity());
+                layout.setOrientation(LinearLayoutCompat.VERTICAL);
 
-                dlg.setView(textView);
+                for (int i = 0; i < inputs.length(); ++i) {
+                    EditText input = createInput(inputs.getJSONObject(i));
+                    inputControls.add(input);
+                    layout.addView(input);
+                }
+
+                dlg.setView(layout);
             }
         }
 
         DialogInterface.OnClickListener clickListener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if (textView == null) {
-                    callbackContext.success(-which);
-                } else {
-                    callbackContext.success(new JSONArray(
-                        Arrays.asList(-which, textView.getText().toString())));
+                JSONArray result = new JSONArray();
+                result.put(-which);
+                for (TextView textInput : inputControls) {
+                    result.put(textInput.getText());
                 }
+
+                sendResult(result, callbackContext);
             }
         };
 
@@ -107,19 +112,17 @@ public class AlertPlugin extends CordovaPlugin {
         }
 
         final AlertDialog alertDialog = dlg.show();
-        final TextView messageView = (TextView)alertDialog.findViewById(android.R.id.message);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            messageView.setTextDirection(View.TEXT_DIRECTION_LOCALE);
-        }
-
         alertDialog.setCanceledOnTouchOutside(false);
 
-        if (textView != null) {
-            // fix text color for a dark theme
-            textView.setTextColor(messageView.getTextColors());
+        if (inputControls.size() > 0) {
+            final TextView messageView = (TextView)alertDialog.findViewById(android.R.id.message);
+            // fix text colors for a non-default theme
+            for (TextView textInput : inputControls) {
+                textInput.setTextColor(messageView.getTextColors());
+                textInput.setHintTextColor(messageView.getHintTextColors());
+            }
             // set focus on the first input and show keyboard
-            textView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            inputControls.get(0).setOnFocusChangeListener(new View.OnFocusChangeListener() {
                 @Override
                 public void onFocusChange(View viev, boolean hasFocus) {
                     if (hasFocus) {
@@ -136,5 +139,14 @@ public class AlertPlugin extends CordovaPlugin {
         input.setHint(settings.optString("hint"));
 
         return input;
+    }
+
+    private void sendResult(final JSONArray result, final CallbackContext callbackContext) {
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                callbackContext.success(result);
+            }
+        });
     }
 }
