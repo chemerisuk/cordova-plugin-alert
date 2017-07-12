@@ -89,6 +89,11 @@ AlertBuilder.prototype = {
         }, error, PLUGIN_NAME, methodName, [this]);
 
         return this;
+    },
+    hide: function(success, error) {
+        exec(success, error, PLUGIN_NAME, "hide", []);
+
+        return this;
     }
 };
 
@@ -103,10 +108,9 @@ module.exports = {
         builder.options = options;
         return builder;
     },
-    createProgress: function(message, title, timeoutMillis) {
+    createProgress: function(message, title) {
         var builder = new AlertBuilder(title, AlertBuilder.TYPE_PROGRESS);
         builder.message = message;
-        builder.timeout = timeoutMillis;
         return builder;
     },
     setTheme: function(theme) {

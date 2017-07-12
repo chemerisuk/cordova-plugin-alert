@@ -5,17 +5,16 @@ import java.util.ArrayList;
 import android.util.Log;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.text.InputType;
 import android.view.View;
 import android.view.WindowManager.LayoutParams;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.os.Build;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.AppCompatEditText;
 import android.support.v7.widget.LinearLayoutCompat;
-import android.app.ProgressDialog;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
@@ -28,20 +27,50 @@ import org.json.JSONObject;
 public class AlertPlugin extends CordovaPlugin {
     private static final String TAG = "AlertPlugin";
 
+    private AlertDialog lastAlert;
+    private ProgressDialog lastProgress;
+
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-        if ("showDialog".equals(action)) {
-            showDialog(args.getJSONObject(0), callbackContext);
+        if ("hide".equals(action)) {
+            hide(callbackContext);
+        } else if (lastAlert != null && lastAlert.isShowing()) {
+            callbackContext.error("Only single alert can be displayed");
+        } else if ("showDialog".equals(action)) {
+            lastAlert = showDialog(args.getJSONObject(0), callbackContext);
         } else if ("showSheet".equals(action)) {
-            showSheet(args.getJSONObject(0), callbackContext);
+            lastAlert = showSheet(args.getJSONObject(0), callbackContext);
         } else if ("showProgress".equals(action)) {
-            showProgress(args.getJSONObject(0), callbackContext);
+            lastProgress = showProgress(args.getJSONObject(0), callbackContext);
+        } else {
+            return false;
         }
 
         return true;
     }
 
-    private void showSheet(JSONObject settings, final CallbackContext callbackContext) throws JSONException {
+    private void hide(final CallbackContext callbackContext) {
+        if (lastAlert == null && lastProgress == null) return;
+
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (lastAlert != null) {
+                    lastAlert.hide();
+                    lastAlert = null;
+                }
+
+                if (lastProgress != null) {
+                    lastProgress.hide();
+                    lastProgress = null;
+                }
+
+                callbackContext.success();
+            }
+        });
+    }
+
+    private AlertDialog showSheet(JSONObject settings, final CallbackContext callbackContext) throws JSONException {
         AlertDialog.Builder dlg = createBuilder(settings);
 
         JSONArray options = settings.getJSONArray("options");
@@ -71,9 +100,11 @@ public class AlertPlugin extends CordovaPlugin {
 
         final AlertDialog alertDialog = dlg.show();
         alertDialog.setCanceledOnTouchOutside(false);
+
+        return alertDialog;
     }
 
-    private void showDialog(JSONObject settings, final CallbackContext callbackContext) throws JSONException {
+    private AlertDialog showDialog(JSONObject settings, final CallbackContext callbackContext) throws JSONException {
         AlertDialog.Builder dlg = createBuilder(settings);
         dlg.setMessage(settings.getString("message"));
 
@@ -125,41 +156,32 @@ public class AlertPlugin extends CordovaPlugin {
                 }
             });
         }
+
+        return alertDialog;
     }
 
-    private void showProgress(JSONObject settings, CallbackContext callbackContext) throws JSONException {
-        final ProgressDialog dlg;
+    private ProgressDialog showProgress(JSONObject settings, CallbackContext callbackContext) throws JSONException {
+        // hide previous progress if any
+        if (lastProgress != null) {
+            lastProgress.hide();
+            lastProgress = null;
+        }
+
+        final ProgressDialog progressDlg;
         int dlgTheme = settings.optInt("theme", 0);
 
         if (dlgTheme > 0) {
-            dlg = new ProgressDialog(cordova.getActivity(), dlgTheme);
+            progressDlg = new ProgressDialog(cordova.getActivity(), dlgTheme);
         } else {
-            dlg = new ProgressDialog(cordova.getActivity());
+            progressDlg = new ProgressDialog(cordova.getActivity());
         }
 
-        dlg.setTitle(settings.optString("title", ""));
-        dlg.setMessage(settings.getString("message"));
-        dlg.setCancelable(true);
+        progressDlg.setTitle(settings.optString("title", ""));
+        progressDlg.setMessage(settings.getString("message"));
+        progressDlg.setCancelable(true);
+        progressDlg.show();
 
-        final int timeoutInterval = settings.getInt("timeout");
-        cordova.getThreadPool().execute(new Runnable() {
-            public void run() {
-                try {
-                    Thread.sleep(timeoutInterval);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                cordova.getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        dlg.hide();
-                    }
-                });
-            }
-        });
-
-        dlg.show();
+        return progressDlg;
     }
 
     private AlertDialog.Builder createBuilder(JSONObject settings) throws JSONException {
