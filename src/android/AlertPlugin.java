@@ -6,6 +6,7 @@ import android.util.Log;
 
 import android.app.Activity;
 import android.content.DialogInterface;
+import android.text.InputType;
 import android.view.View;
 import android.view.WindowManager.LayoutParams;
 import android.widget.EditText;
@@ -41,8 +42,6 @@ public class AlertPlugin extends CordovaPlugin {
 
     private void showSheet(JSONObject settings, final CallbackContext callbackContext) throws JSONException {
         AlertDialog.Builder dlg = createBuilder(settings);
-        // only title is available, so use message field
-        dlg.setTitle(settings.optString("message", ""));
 
         JSONArray options = settings.getJSONArray("options");
         final String[] optionsArray = new String[options.length()];
@@ -75,7 +74,6 @@ public class AlertPlugin extends CordovaPlugin {
 
     private void showDialog(JSONObject settings, final CallbackContext callbackContext) throws JSONException {
         AlertDialog.Builder dlg = createBuilder(settings);
-        dlg.setTitle(settings.optString("title", ""));
         dlg.setMessage(settings.getString("message"));
 
         JSONArray inputs = settings.optJSONArray("inputs");
@@ -138,6 +136,7 @@ public class AlertPlugin extends CordovaPlugin {
             builder = new AlertDialog.Builder(cordova.getActivity());
         }
 
+        builder.setTitle(settings.optString("title", ""));
         builder.setCancelable(true);
 
         return builder;
@@ -145,8 +144,20 @@ public class AlertPlugin extends CordovaPlugin {
 
     private EditText createInput(JSONObject settings) throws JSONException {
         EditText input = new AppCompatEditText(cordova.getActivity());
-        input.setInputType(settings.getInt("type"));
+
         input.setHint(settings.optString("placeholder"));
+
+        int inputType = settings.getInt("type");
+        String autocapitalize = settings.optString("autocapitalize", "");
+        if ("words".equals(autocapitalize)) {
+            inputType |= InputType.TYPE_TEXT_FLAG_CAP_WORDS;
+        } else if ("characters".equals(autocapitalize)) {
+            inputType |= InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS;
+        } else if ("sentences".equals(autocapitalize)) {
+            inputType |= InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
+        }
+
+        input.setInputType(inputType);
 
         return input;
     }

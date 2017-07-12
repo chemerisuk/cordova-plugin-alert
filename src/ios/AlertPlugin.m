@@ -39,6 +39,15 @@
                 NSDictionary *inputSettings = inputs[j];
 
                 [alertController addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+                    NSString *autocapitalize = inputSettings[@"autocapitalize"] ?: @"";
+                    if ([autocapitalize isEqualToString:@"words"]) {
+                        textField.autocapitalizationType = UITextAutocapitalizationTypeWords;
+                    } else if ([autocapitalize isEqualToString:@"characters"]) {
+                        textField.autocapitalizationType = UITextAutocapitalizationTypeAllCharacters;
+                    } else if ([autocapitalize isEqualToString:@"sentences"]) {
+                        textField.autocapitalizationType = UITextAutocapitalizationTypeSentences;
+                    }
+
                     textField.placeholder = inputSettings[@"placeholder"];
                     textField.keyboardType = [inputSettings[@"type"] intValue];
                 }];
