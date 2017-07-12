@@ -4,5 +4,10 @@
 
 - (void)showDialog:(CDVInvokedUrlCommand *)command;
 - (void)showSheet:(CDVInvokedUrlCommand *)command;
+- (void)showProgress:(CDVInvokedUrlCommand *)command;
+- (void)hide:(CDVInvokedUrlCommand *)command;
+
+@property (nonatomic, retain) UIAlertController *alertController;
+@property (nonatomic, retain) UIAlertController *progressController;
 
 @end
