@@ -13,6 +13,7 @@ function AlertBuilder(title, type) {
 
 AlertBuilder.TYPE_SHEET = "sheet";
 AlertBuilder.TYPE_DIALOG = "dialog";
+AlertBuilder.TYPE_PROGRESS = "progress";
 AlertBuilder.getCurrentTheme = function() { return 0; };
 
 AlertBuilder.prototype = {
@@ -100,6 +101,12 @@ module.exports = {
     createSheet: function(options, title) {
         var builder = new AlertBuilder(title, AlertBuilder.TYPE_SHEET);
         builder.options = options;
+        return builder;
+    },
+    createProgress: function(message, title, timeoutMillis) {
+        var builder = new AlertBuilder(title, AlertBuilder.TYPE_PROGRESS);
+        builder.message = message;
+        builder.timeout = timeoutMillis;
         return builder;
     },
     setTheme: function(theme) {

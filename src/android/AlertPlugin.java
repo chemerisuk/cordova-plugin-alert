@@ -15,6 +15,7 @@ import android.os.Build;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.AppCompatEditText;
 import android.support.v7.widget.LinearLayoutCompat;
+import android.app.ProgressDialog;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
@@ -33,8 +34,8 @@ public class AlertPlugin extends CordovaPlugin {
             showDialog(args.getJSONObject(0), callbackContext);
         } else if ("showSheet".equals(action)) {
             showSheet(args.getJSONObject(0), callbackContext);
-        } else {
-            return false;
+        } else if ("showProgress".equals(action)) {
+            showProgress(args.getJSONObject(0), callbackContext);
         }
 
         return true;
@@ -124,6 +125,41 @@ public class AlertPlugin extends CordovaPlugin {
                 }
             });
         }
+    }
+
+    private void showProgress(JSONObject settings, CallbackContext callbackContext) throws JSONException {
+        final ProgressDialog dlg;
+        int dlgTheme = settings.optInt("theme", 0);
+
+        if (dlgTheme > 0) {
+            dlg = new ProgressDialog(cordova.getActivity(), dlgTheme);
+        } else {
+            dlg = new ProgressDialog(cordova.getActivity());
+        }
+
+        dlg.setTitle(settings.optString("title", ""));
+        dlg.setMessage(settings.getString("message"));
+        dlg.setCancelable(true);
+
+        final int timeoutInterval = settings.getInt("timeout");
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                try {
+                    Thread.sleep(timeoutInterval);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                cordova.getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        dlg.hide();
+                    }
+                });
+            }
+        });
+
+        dlg.show();
     }
 
     private AlertDialog.Builder createBuilder(JSONObject settings) throws JSONException {
