@@ -54,12 +54,11 @@
 - (void)showSheet:(CDVInvokedUrlCommand *)command {
     NSDictionary* options = [command argumentAtIndex:0];
     NSString *title = options[@"title"];
-    NSString *message = options[@"message"];
     NSArray* actions = options[@"options"];
 
     [self.commandDelegate runInBackground:^{
         UIAlertController *alertController = [UIAlertController
-            alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleActionSheet];
+            alertControllerWithTitle:@"" message:title preferredStyle:UIAlertControllerStyleActionSheet];
 
         void (^actionHandler)() = ^(UIAlertAction *action) {
             NSMutableArray* result = [[NSMutableArray alloc] init];
@@ -82,11 +81,12 @@
         }
 
         dispatch_async(dispatch_get_main_queue(), ^{
-            if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
-                [alertController setModalPresentationStyle:UIModalPresentationPopover];
-                [alertController.popoverPresentationController setPermittedArrowDirections:0];
-                alertController.popoverPresentationController.sourceView = self.webView.superview;
-                alertController.popoverPresentationController.sourceRect = CGRectMake(CGRectGetMidX(self.webView.bounds), CGRectGetMidY(self.webView.bounds), 0, 0);
+            UIPopoverPresentationController *popover = alertController.popoverPresentationController;
+            if (popover) {
+                popover.permittedArrowDirections = UIPopoverArrowDirectionUnknown;
+                popover.sourceView = self.webView.superview;
+                popover.sourceRect = CGRectMake(CGRectGetMidX(self.webView.bounds), CGRectGetMidY(self.webView.bounds), 0, 0);
+
             }
 
             [self.viewController presentViewController:alertController animated:YES completion:NULL];
