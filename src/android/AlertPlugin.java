@@ -49,8 +49,17 @@ public class AlertPlugin extends CordovaPlugin {
         return true;
     }
 
+    private void hideProgress() {
+        if (lastProgress != null) {
+            lastProgress.hide();
+            lastProgress = null;
+        }
+    }
+
     private void hide(final CallbackContext callbackContext) {
-        if (lastAlert == null && lastProgress == null) return;
+        hideProgress();
+
+        if (lastAlert == null) return;
 
         cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
@@ -60,17 +69,14 @@ public class AlertPlugin extends CordovaPlugin {
                     lastAlert = null;
                 }
 
-                if (lastProgress != null) {
-                    lastProgress.hide();
-                    lastProgress = null;
-                }
-
                 callbackContext.success();
             }
         });
     }
 
     private AlertDialog showSheet(JSONObject settings, final CallbackContext callbackContext) throws JSONException {
+        hideProgress();
+
         AlertDialog.Builder dlg = createBuilder(settings);
 
         JSONArray options = settings.getJSONArray("options");
@@ -105,6 +111,8 @@ public class AlertPlugin extends CordovaPlugin {
     }
 
     private AlertDialog showDialog(JSONObject settings, final CallbackContext callbackContext) throws JSONException {
+        hideProgress();
+
         AlertDialog.Builder dlg = createBuilder(settings);
         dlg.setMessage(settings.getString("message"));
 
@@ -161,11 +169,7 @@ public class AlertPlugin extends CordovaPlugin {
     }
 
     private ProgressDialog showProgress(JSONObject settings, CallbackContext callbackContext) throws JSONException {
-        // hide previous progress if any
-        if (lastProgress != null) {
-            lastProgress.hide();
-            lastProgress = null;
-        }
+        hideProgress();
 
         final ProgressDialog progressDlg;
         int dlgTheme = settings.optInt("theme", 0);
