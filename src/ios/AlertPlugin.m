@@ -80,7 +80,7 @@
 
 - (void)showSheet:(CDVInvokedUrlCommand *)command {
     NSDictionary* options = [command argumentAtIndex:0];
-    NSString *title = options[@"title"] ?: @"";
+    NSString *title = options[@"title"];
     NSArray* actions = options[@"options"];
 
     if (self.lastAlert) {
@@ -93,9 +93,9 @@
     [self hideProgress];
 
     [self.commandDelegate runInBackground:^{
-        self.lastAlert = [UIAlertController alertControllerWithTitle:@""
-                                                                   message:title
-                                                            preferredStyle:UIAlertControllerStyleActionSheet];
+        self.lastAlert = [UIAlertController alertControllerWithTitle:nil
+                                                             message:title
+                                                      preferredStyle:UIAlertControllerStyleActionSheet];
 
         void (^actionHandler)() = ^(UIAlertAction *action) {
             NSMutableArray* result = [[NSMutableArray alloc] init];
