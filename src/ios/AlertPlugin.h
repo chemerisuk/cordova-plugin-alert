@@ -7,7 +7,7 @@
 - (void)showProgress:(CDVInvokedUrlCommand *)command;
 - (void)hide:(CDVInvokedUrlCommand *)command;
 
-@property (nonatomic, retain) UIAlertController *alertController;
-@property (nonatomic, retain) UIAlertController *progressController;
+@property (nonatomic, retain) UIAlertController *lastAlert;
+@property (nonatomic, retain) UIAlertController *lastProgress;
 
 @end
