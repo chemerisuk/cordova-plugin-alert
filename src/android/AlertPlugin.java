@@ -59,8 +59,6 @@ public class AlertPlugin extends CordovaPlugin {
     private void hide(final CallbackContext callbackContext) {
         hideProgress();
 
-        if (lastAlert == null) return;
-
         cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
