@@ -34,6 +34,8 @@
                 [result addObject:[[self.lastAlert.textFields objectAtIndex:j] text]];
             }
 
+            self.lastAlert = nil;
+
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:result];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         };
@@ -101,6 +103,8 @@
             long actionIndex = [actions indexOfObject:action.title] + 1;
             [result addObject:[NSNumber numberWithLong:actionIndex]];
             [result addObject:action.title];
+
+            self.lastAlert = nil;
 
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:result];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
