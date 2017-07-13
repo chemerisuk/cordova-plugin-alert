@@ -17,71 +17,72 @@
         return;
     }
 
-    [self hideProgress];
+    [self hideProgress:^{
+        [self.commandDelegate runInBackground:^{
+            self.lastAlert = [UIAlertController alertControllerWithTitle:title
+                                                                       message:message
+                                                                preferredStyle:UIAlertControllerStyleAlert];
 
-    [self.commandDelegate runInBackground:^{
-        self.lastAlert = [UIAlertController alertControllerWithTitle:title
-                                                                   message:message
-                                                            preferredStyle:UIAlertControllerStyleAlert];
+            void (^actionHandler)() = ^(UIAlertAction *action) {
+                NSMutableArray* result = [[NSMutableArray alloc] init];
 
-        void (^actionHandler)() = ^(UIAlertAction *action) {
-            NSMutableArray* result = [[NSMutableArray alloc] init];
+                long actionIndex = [actions indexOfObject:action.title] + 1;
+                [result addObject:[NSNumber numberWithLong:actionIndex]];
 
-            long actionIndex = [actions indexOfObject:action.title] + 1;
-            [result addObject:[NSNumber numberWithLong:actionIndex]];
+                for (int j = 0, n = (int)[inputs count]; j < n; ++j) {
+                    [result addObject:[[self.lastAlert.textFields objectAtIndex:j] text]];
+                }
 
-            for (int j = 0, n = (int)[inputs count]; j < n; ++j) {
-                [result addObject:[[self.lastAlert.textFields objectAtIndex:j] text]];
+                self.lastAlert = NULL;
+
+                CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:result];
+                [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+            };
+
+            for (int i = (int)[actions count] - 1; i >= 0; --i) {
+                [self.lastAlert addAction:[UIAlertAction actionWithTitle:[actions objectAtIndex:i]
+                                                                         style:UIAlertActionStyleDefault
+                                                                       handler:actionHandler
+                ]];
             }
 
-            self.lastAlert = nil;
+            if (inputs) {
+                for (int j = 0, n = (int)[inputs count]; j < n; ++j) {
+                    NSDictionary *inputSettings = inputs[j];
 
-            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:result];
-            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-        };
+                    [self.lastAlert addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+                        NSString *autocapitalize = inputSettings[@"autocapitalize"] ?: @"";
+                        if ([autocapitalize isEqualToString:@"words"]) {
+                            textField.autocapitalizationType = UITextAutocapitalizationTypeWords;
+                        } else if ([autocapitalize isEqualToString:@"characters"]) {
+                            textField.autocapitalizationType = UITextAutocapitalizationTypeAllCharacters;
+                        } else if ([autocapitalize isEqualToString:@"sentences"]) {
+                            textField.autocapitalizationType = UITextAutocapitalizationTypeSentences;
+                        }
 
-        for (int i = (int)[actions count] - 1; i >= 0; --i) {
-            [self.lastAlert addAction:[UIAlertAction actionWithTitle:[actions objectAtIndex:i]
-                                                                     style:UIAlertActionStyleDefault
-                                                                   handler:actionHandler
-            ]];
-        }
+                        textField.placeholder = inputSettings[@"placeholder"];
+                        textField.keyboardType = [inputSettings[@"type"] intValue];
+                        textField.returnKeyType = UIReturnKeyNext;
 
-        if (inputs) {
-            for (int j = 0, n = (int)[inputs count]; j < n; ++j) {
-                NSDictionary *inputSettings = inputs[j];
-
-                [self.lastAlert addTextFieldWithConfigurationHandler:^(UITextField *textField) {
-                    NSString *autocapitalize = inputSettings[@"autocapitalize"] ?: @"";
-                    if ([autocapitalize isEqualToString:@"words"]) {
-                        textField.autocapitalizationType = UITextAutocapitalizationTypeWords;
-                    } else if ([autocapitalize isEqualToString:@"characters"]) {
-                        textField.autocapitalizationType = UITextAutocapitalizationTypeAllCharacters;
-                    } else if ([autocapitalize isEqualToString:@"sentences"]) {
-                        textField.autocapitalizationType = UITextAutocapitalizationTypeSentences;
-                    }
-
-                    textField.placeholder = inputSettings[@"placeholder"];
-                    textField.keyboardType = [inputSettings[@"type"] intValue];
-                    textField.returnKeyType = UIReturnKeyNext;
-
-                    if (theme > 0) {
-                        textField.keyboardAppearance = UIKeyboardAppearanceDark;
-                    }
-                }];
+                        if (theme > 0) {
+                            textField.keyboardAppearance = UIKeyboardAppearanceDark;
+                        }
+                    }];
+                }
             }
-        }
 
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.viewController presentViewController:self.lastAlert animated:YES completion:NULL];
-        });
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.viewController presentViewController:self.lastAlert animated:YES completion:NULL];
+            });
+        }];
     }];
 }
 
 - (void)showSheet:(CDVInvokedUrlCommand *)command {
     NSDictionary* options = [command argumentAtIndex:0];
     NSString *title = options[@"title"];
-    NSArray* actions = options[@"options"];
+    NSArray* items = options[@"options"];
+    NSArray* actions = options[@"actions"];
 
     if (self.lastAlert) {
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Only single alert can be displayed"];
@@ -90,45 +91,67 @@
         return;
     }
 
-    [self hideProgress];
+    [self hideProgress:^{
+        [self.commandDelegate runInBackground:^{
+            self.lastAlert = [UIAlertController alertControllerWithTitle:NULL
+                                                                 message:title
+                                                          preferredStyle:UIAlertControllerStyleActionSheet];
 
-    [self.commandDelegate runInBackground:^{
-        self.lastAlert = [UIAlertController alertControllerWithTitle:nil
-                                                             message:title
-                                                      preferredStyle:UIAlertControllerStyleActionSheet];
+            void (^actionHandler)() = ^(UIAlertAction *action) {
+                NSMutableArray* result = [[NSMutableArray alloc] init];
 
-        void (^actionHandler)() = ^(UIAlertAction *action) {
-            NSMutableArray* result = [[NSMutableArray alloc] init];
+                if (action.style == UIAlertActionStyleCancel) {
+                    [result addObject:[NSNumber numberWithLong:1]];
+                } else {
+                    long actionIndex = [items indexOfObject:action.title] + 1;
+                    [result addObject:[NSNumber numberWithLong:actionIndex]];
+                    [result addObject:action.title];
+                }
 
-            long actionIndex = [actions indexOfObject:action.title] + 1;
-            [result addObject:[NSNumber numberWithLong:actionIndex]];
-            [result addObject:action.title];
+                self.lastAlert = NULL;
 
-            self.lastAlert = nil;
+                CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:result];
+                [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+            };
 
-            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:result];
-            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-        };
+            if (items) {
+                for (int i = 0, n = (int)[items count]; i < n; ++i) {
+                    [self.lastAlert addAction:[UIAlertAction actionWithTitle:[items objectAtIndex:i]
+                                                                       style:UIAlertActionStyleDefault
+                                                                     handler:actionHandler
+                    ]];
+                }
+            }
 
-        if (actions) {
-            for (int i = 0, n = (int)[actions count]; i < n; ++i) {
-                [self.lastAlert addAction:[UIAlertAction actionWithTitle:[actions objectAtIndex:i]
-                                                                         style:UIAlertActionStyleDefault
-                                                                       handler:actionHandler
+            NSString* cancelActionTitle;
+            UIPopoverPresentationController *popover = self.lastAlert.popoverPresentationController;
+
+            if (actions && [actions count] > 0) {
+                // only single cancel button available on iOS
+                cancelActionTitle = [actions objectAtIndex:0];
+            } else if (popover) {
+                // for iPad add fake cancel button (that is invisible)
+                // to handle tap outside and reset internal state
+                cancelActionTitle = @"Cancel";
+            }
+
+            if (cancelActionTitle) {
+                [self.lastAlert addAction:[UIAlertAction actionWithTitle:cancelActionTitle
+                                                                   style:UIAlertActionStyleCancel
+                                                                 handler:actionHandler
                 ]];
             }
-        }
 
-        dispatch_async(dispatch_get_main_queue(), ^{
-            UIPopoverPresentationController *popover = self.lastAlert.popoverPresentationController;
-            if (popover) {
-                popover.permittedArrowDirections = 0;
-                popover.sourceView = self.webView.superview;
-                popover.sourceRect = CGRectMake(CGRectGetMidX(self.webView.bounds), CGRectGetMidY(self.webView.bounds), 0, 0);
-            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (popover) {
+                    popover.permittedArrowDirections = 0;
+                    popover.sourceView = self.webView.superview;
+                    popover.sourceRect = CGRectMake(CGRectGetMidX(self.webView.bounds), CGRectGetMidY(self.webView.bounds), 0, 0);
+                }
 
-            [self.viewController presentViewController:self.lastAlert animated:YES completion:NULL];
-        });
+                [self.viewController presentViewController:self.lastAlert animated:YES completion:NULL];
+            });
+        }];
     }];
 }
 
@@ -144,54 +167,61 @@
         return;
     }
 
-    [self hideProgress];
+    [self hideProgress:^{
+        [self.commandDelegate runInBackground:^{
+            self.lastProgress = [UIAlertController alertControllerWithTitle:title
+                                                                       message:[NSString stringWithFormat:@"%@\n\n\n\n", message]
+                                                                preferredStyle:UIAlertControllerStyleAlert];
 
-    [self.commandDelegate runInBackground:^{
-        self.lastProgress = [UIAlertController alertControllerWithTitle:title
-                                                                   message:[NSString stringWithFormat:@"%@\n\n\n\n", message]
-                                                            preferredStyle:UIAlertControllerStyleAlert];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                UIActivityIndicatorView* spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+                spinner.color = [UIColor blackColor];
+                spinner.center = CGPointMake(self.lastProgress.view.bounds.size.width / 2,
+                                             self.lastProgress.view.bounds.size.height / 1.4);
+                spinner.autoresizingMask =
+                    UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin |
+                    UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
 
-        dispatch_async(dispatch_get_main_queue(), ^{
-            UIActivityIndicatorView* spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-            spinner.color = [UIColor blackColor];
-            spinner.center = CGPointMake(self.lastProgress.view.bounds.size.width / 2,
-                                         self.lastProgress.view.bounds.size.height / 1.4);
-            spinner.autoresizingMask =
-                UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin |
-                UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
-            [spinner startAnimating];
+                [spinner startAnimating];
 
-            [self.lastProgress.view addSubview:spinner];
+                [self.lastProgress.view addSubview:spinner];
 
-            [self.viewController presentViewController:self.lastProgress animated:YES completion:^{
-               [self.lastProgress.view.superview addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hideProgress)]];
-            }];
-        });
+                [self.viewController presentViewController:self.lastProgress animated:YES completion:^{
+                   [self.lastProgress.view.superview addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hideProgressOnTap)]];
+                }];
+            });
+        }];
     }];
 }
 
-- (void)hideProgress {
-    if (self.lastProgress) {
-        [self.lastProgress dismissViewControllerAnimated:YES completion:nil];
+- (void)hideProgressOnTap {
+    [self.lastProgress dismissViewControllerAnimated:YES completion:NULL];
+}
 
-        self.lastProgress = nil;
+- (void)hideProgress:(void (^)(void))completion {
+    if (self.lastProgress) {
+        [self.lastProgress dismissViewControllerAnimated:YES completion:completion];
+
+        self.lastProgress = NULL;
+    } else if (completion) {
+        completion();
     }
 }
 
 - (void)hide:(CDVInvokedUrlCommand *)command {
-    [self hideProgress];
+    [self hideProgress:^{
+        if (self.lastAlert) {
+            [self.lastAlert dismissViewControllerAnimated:YES completion:^{
+                self.lastAlert = NULL;
 
-    if (self.lastAlert) {
-        [self.lastAlert dismissViewControllerAnimated:YES completion:^{
-            self.lastAlert = nil;
-
+                CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+                [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+            }];
+        } else {
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-        }];
-    } else {
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    }
+        }
+    }];
 }
 
 @end
