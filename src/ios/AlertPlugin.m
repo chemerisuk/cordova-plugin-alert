@@ -39,11 +39,17 @@
                 [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
             };
 
-            for (int i = (int)[actions count] - 1; i >= 0; --i) {
-                [self.lastAlert addAction:[UIAlertAction actionWithTitle:[actions objectAtIndex:i]
-                                                                         style:UIAlertActionStyleDefault
-                                                                       handler:actionHandler
-                ]];
+            for (int i = 0, n = (int)[actions count]; i < n; ++i) {
+                UIAlertActionStyle actionStyle = i == 1 ? UIAlertActionStyleCancel : UIAlertActionStyleDefault;
+                UIAlertAction *action = [UIAlertAction actionWithTitle:[actions objectAtIndex:i]
+                                                                 style:actionStyle
+                                                               handler:actionHandler
+                                        ];
+
+                [self.lastAlert addAction:action];
+                if (i == 0 && n > 1) {
+                    self.lastAlert.preferredAction = action;
+                }
             }
 
             if (inputs) {

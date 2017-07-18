@@ -1,5 +1,5 @@
 # cordova-plugin-alert<br>[![NPM version][npm-version]][npm-url] [![NPM downloads][npm-downloads]][npm-url]
-> Display platform-specific modal dialogs in your cordova app
+> Display native modal dialogs in your cordova app using unified API
 
 ## Installation
 

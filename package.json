@@ -1,7 +1,7 @@
 {
   "name": "cordova-plugin-alert",
   "version": "0.1.0",
-  "description": "Display platform-specific modal dialogs in your cordova app",
+  "description": "Display native modal dialogs in your cordova app using unified API",
   "cordova": {
     "id": "cordova-plugin-alert",
     "platforms": [
