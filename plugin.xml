@@ -28,6 +28,8 @@ xmlns:android="http://schemas.android.com/apk/res/android"
 
         <header-file src="src/ios/AlertPlugin.h" />
         <source-file src="src/ios/AlertPlugin.m" />
+        <header-file src="src/ios/HCSStarRatingView.h" />
+        <source-file src="src/ios/HCSStarRatingView.m" />
     </platform>
 
     <platform name="android">
