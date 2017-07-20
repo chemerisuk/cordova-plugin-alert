@@ -73,6 +73,11 @@ AlertBuilder.prototype = {
 
         return this.addInput(inputType, config);
     },
+    addRatingBar: function() {
+        this.rating = true;
+
+        return this;
+    },
     show: function(success, error) {
         var methodName = "show" + this.type[0].toUpperCase() + this.type.slice(1);
 

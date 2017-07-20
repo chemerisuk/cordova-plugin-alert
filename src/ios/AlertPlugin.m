@@ -1,4 +1,5 @@
 #import "AlertPlugin.h"
+#import "HCSStarRatingView.h"
 
 @implementation AlertPlugin
 
@@ -9,6 +10,13 @@
     NSArray* actions = options[@"actions"];
     NSArray* inputs = options[@"inputs"];
     int theme = [options[@"theme"] intValue];
+    HCSStarRatingView *starRatingView = NULL;
+
+    if (options[@"rating"]) {
+        starRatingView = [[HCSStarRatingView alloc] initWithFrame:CGRectMake(35, 75, 200, 50)];
+        // add extra padding for rating bar
+        message = [NSString stringWithFormat:@"%@\n\n\n\n", message];
+    }
 
     if (self.lastAlert) {
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Only single alert can be displayed"];
@@ -18,16 +26,30 @@
     }
 
     [self hideProgress:^{
-        [self.commandDelegate runInBackground:^{
+        // [self.commandDelegate runInBackground:^{
             self.lastAlert = [UIAlertController alertControllerWithTitle:title
                                                                        message:message
                                                                 preferredStyle:UIAlertControllerStyleAlert];
+
+            if (starRatingView) {
+                starRatingView.backgroundColor = [UIColor clearColor];
+                starRatingView.spacing = 15;
+                starRatingView.maximumValue = 5;
+                starRatingView.minimumValue = 1;
+                starRatingView.value = 0;
+
+                [self.lastAlert.view addSubview:starRatingView];
+            }
 
             void (^actionHandler)() = ^(UIAlertAction *action) {
                 NSMutableArray* result = [[NSMutableArray alloc] init];
 
                 long actionIndex = [actions indexOfObject:action.title] + 1;
                 [result addObject:[NSNumber numberWithLong:actionIndex]];
+
+                if (starRatingView) {
+                    [result addObject:[NSNumber numberWithFloat:starRatingView.value]];
+                }
 
                 for (int j = 0, n = (int)[inputs count]; j < n; ++j) {
                     [result addObject:[[self.lastAlert.textFields objectAtIndex:j] text]];
@@ -83,7 +105,7 @@
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.viewController presentViewController:self.lastAlert animated:YES completion:NULL];
             });
-        }];
+        // }];
     }];
 }
 
@@ -101,7 +123,7 @@
     }
 
     [self hideProgress:^{
-        [self.commandDelegate runInBackground:^{
+        // [self.commandDelegate runInBackground:^{
             self.lastAlert = [UIAlertController alertControllerWithTitle:NULL
                                                                  message:title
                                                           preferredStyle:UIAlertControllerStyleActionSheet];
@@ -160,7 +182,7 @@
 
                 [self.viewController presentViewController:self.lastAlert animated:YES completion:NULL];
             });
-        }];
+        // }];
     }];
 }
 
@@ -177,7 +199,7 @@
     }
 
     [self hideProgress:^{
-        [self.commandDelegate runInBackground:^{
+        // [self.commandDelegate runInBackground:^{
             self.lastProgress = [UIAlertController alertControllerWithTitle:title
                                                                        message:[NSString stringWithFormat:@"%@\n\n\n\n", message]
                                                                 preferredStyle:UIAlertControllerStyleAlert];
@@ -199,7 +221,7 @@
                    [self.lastProgress.view.superview addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hideProgressOnTap)]];
                 }];
             });
-        }];
+        // }];
     }];
 }
 
