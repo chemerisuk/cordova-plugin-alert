@@ -205,6 +205,7 @@ public class AlertPlugin extends CordovaPlugin {
     private EditText createInput(JSONObject settings) throws JSONException {
         EditText input = new AppCompatEditText(cordova.getActivity());
 
+        input.setText(settings.optString("value"), TextView.BufferType.NORMAL);
         input.setHint(settings.optString("placeholder"));
 
         int inputType = settings.getInt("type");

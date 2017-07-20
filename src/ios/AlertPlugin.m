@@ -91,6 +91,7 @@
                             textField.autocapitalizationType = UITextAutocapitalizationTypeSentences;
                         }
 
+                        textField.text = inputSettings[@"value"];
                         textField.placeholder = inputSettings[@"placeholder"];
                         textField.keyboardType = [inputSettings[@"type"] intValue];
                         textField.returnKeyType = UIReturnKeyNext;
