@@ -94,7 +94,7 @@
                         textField.text = inputSettings[@"value"];
                         textField.placeholder = inputSettings[@"placeholder"];
                         textField.keyboardType = [inputSettings[@"type"] intValue];
-                        textField.returnKeyType = UIReturnKeyNext;
+                        textField.returnKeyType = j < n - 1 ? UIReturnKeyNext : UIReturnKeyDone;
 
                         if (theme > 0) {
                             textField.keyboardAppearance = UIKeyboardAppearanceDark;
