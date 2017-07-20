@@ -48,7 +48,10 @@
 
                 [self.lastAlert addAction:action];
                 if (i == 0 && n > 1) {
-                    self.lastAlert.preferredAction = action;
+                    // set preferredAction only for iOS9+
+                    if ([self.lastAlert respondsToSelector:@selector(setPreferredAction:)]) {
+                        self.lastAlert.preferredAction = action;
+                    }
                 }
             }
 
