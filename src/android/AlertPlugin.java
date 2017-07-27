@@ -8,12 +8,15 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.text.InputType;
+import android.text.InputFilter;
 import android.view.View;
 import android.view.WindowManager.LayoutParams;
 import android.widget.EditText;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.AppCompatEditText;
+import android.support.v7.widget.AppCompatRatingBar;
 import android.support.v7.widget.LinearLayoutCompat;
 
 import org.apache.cordova.CordovaPlugin;
@@ -114,18 +117,30 @@ public class AlertPlugin extends CordovaPlugin {
         AlertDialog.Builder dlg = createBuilder(settings);
         dlg.setMessage(settings.getString("message"));
 
+        LinearLayoutCompat layout = null;
+        RatingBar ratingBar = null;
+
+        if (settings.optBoolean("rating", false)) {
+            layout = createLayout();
+            ratingBar = createRatingBar();
+            layout.addView(ratingBar);
+        }
+
         JSONArray inputs = settings.optJSONArray("inputs");
         final List<TextView> inputControls = new ArrayList<TextView>();
         if (inputs != null) {
-            LinearLayoutCompat layout = new LinearLayoutCompat(cordova.getActivity());
-            layout.setOrientation(LinearLayoutCompat.VERTICAL);
+            if (layout == null) {
+                layout = createLayout();
+            }
 
             for (int i = 0; i < inputs.length(); ++i) {
-                EditText input = createInput(inputs.getJSONObject(i));
+                final EditText input = createInput(inputs.getJSONObject(i));
                 inputControls.add(input);
                 layout.addView(input);
             }
+        }
 
+        if (layout != null) {
             dlg.setView(layout);
         }
 
@@ -144,6 +159,21 @@ public class AlertPlugin extends CordovaPlugin {
 
         final AlertDialog alertDialog = dlg.show();
         alertDialog.setCanceledOnTouchOutside(false);
+
+        if (ratingBar != null) {
+            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+
+            ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+                @Override
+                public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
+                    alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+
+                    if (rating < 1) {
+                        ratingBar.setRating(1);
+                    }
+                }
+            });
+        }
 
         if (inputControls.size() > 0) {
             final TextView messageView = (TextView)alertDialog.findViewById(android.R.id.message);
@@ -202,6 +232,26 @@ public class AlertPlugin extends CordovaPlugin {
         return builder;
     }
 
+    private LinearLayoutCompat createLayout() {
+        LinearLayoutCompat layout = new LinearLayoutCompat(cordova.getActivity());
+        layout.setOrientation(LinearLayoutCompat.VERTICAL);
+        layout.setGravity(android.view.Gravity.CENTER);
+
+        return layout;
+    }
+
+    private RatingBar createRatingBar() {
+        RatingBar rating = new AppCompatRatingBar(cordova.getActivity());
+        rating.setRating(0);
+        rating.setMax(5);
+        rating.setStepSize(1);
+        rating.setNumStars(5);
+        rating.setLayoutParams(new LinearLayoutCompat.LayoutParams(
+            LinearLayoutCompat.LayoutParams.WRAP_CONTENT, LinearLayoutCompat.LayoutParams.WRAP_CONTENT));
+
+        return rating;
+    }
+
     private EditText createInput(JSONObject settings) throws JSONException {
         EditText input = new AppCompatEditText(cordova.getActivity());
 
@@ -216,6 +266,11 @@ public class AlertPlugin extends CordovaPlugin {
             inputType |= InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS;
         } else if ("sentences".equals(autocapitalize)) {
             inputType |= InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
+        }
+
+        int maxLength = settings.optInt("maxlength");
+        if (maxLength > 0) {
+            input.setFilters(new InputFilter[] {new InputFilter.LengthFilter(maxLength)});
         }
 
         input.setInputType(inputType);
