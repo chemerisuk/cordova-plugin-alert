@@ -35,7 +35,7 @@
                 starRatingView.backgroundColor = [UIColor clearColor];
                 starRatingView.spacing = 15;
                 starRatingView.maximumValue = 5;
-                starRatingView.minimumValue = 1;
+                starRatingView.minimumValue = 0;
                 starRatingView.value = 0;
 
                 [self.lastAlert.view addSubview:starRatingView];
