@@ -118,12 +118,14 @@ public class AlertPlugin extends CordovaPlugin {
         dlg.setMessage(settings.getString("message"));
 
         LinearLayoutCompat layout = null;
-        RatingBar ratingBar = null;
+        final RatingBar ratingBar;
 
         if (settings.optBoolean("rating", false)) {
             layout = createLayout();
             ratingBar = createRatingBar();
             layout.addView(ratingBar);
+        } else {
+            ratingBar = null;
         }
 
         JSONArray inputs = settings.optJSONArray("inputs");
@@ -149,6 +151,11 @@ public class AlertPlugin extends CordovaPlugin {
             public void onClick(DialogInterface dialog, int which) {
                 JSONArray result = new JSONArray();
                 result.put(-which);
+
+                if (ratingBar != null) {
+                    result.put((int)ratingBar.getRating());
+                }
+
                 for (TextView textInput : inputControls) {
                     result.put(textInput.getText());
                 }
@@ -159,21 +166,6 @@ public class AlertPlugin extends CordovaPlugin {
 
         final AlertDialog alertDialog = dlg.show();
         alertDialog.setCanceledOnTouchOutside(false);
-
-        if (ratingBar != null) {
-            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-
-            ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
-                @Override
-                public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-                    alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
-
-                    if (rating < 1) {
-                        ratingBar.setRating(1);
-                    }
-                }
-            });
-        }
 
         if (inputControls.size() > 0) {
             final TextView messageView = (TextView)alertDialog.findViewById(android.R.id.message);
@@ -241,15 +233,23 @@ public class AlertPlugin extends CordovaPlugin {
     }
 
     private RatingBar createRatingBar() {
-        RatingBar rating = new AppCompatRatingBar(cordova.getActivity());
-        rating.setRating(0);
-        rating.setMax(5);
-        rating.setStepSize(1);
-        rating.setNumStars(5);
-        rating.setLayoutParams(new LinearLayoutCompat.LayoutParams(
+        RatingBar ratingBar = new AppCompatRatingBar(cordova.getActivity());
+        ratingBar.setRating(0);
+        ratingBar.setMax(5);
+        ratingBar.setStepSize(1);
+        ratingBar.setNumStars(5);
+        ratingBar.setLayoutParams(new LinearLayoutCompat.LayoutParams(
             LinearLayoutCompat.LayoutParams.WRAP_CONTENT, LinearLayoutCompat.LayoutParams.WRAP_CONTENT));
+        ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+            @Override
+            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
+                if (rating < 1) {
+                    ratingBar.setRating(1);
+                }
+            }
+        });
 
-        return rating;
+        return ratingBar;
     }
 
     private EditText createInput(JSONObject settings) throws JSONException {
