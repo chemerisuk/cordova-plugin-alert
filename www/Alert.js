@@ -57,8 +57,8 @@ AlertBuilder.prototype = {
         var inputType = 2;
 
         if (isIOS) {
-            // UIKeyboardTypeDecimalPad / UIKeyboardTypeNumberPad
-            inputType = config && config.decimal ? 8 : 4;
+            // UIKeyboardTypeNumbersAndPunctuation / UIKeyboardTypeNumberPad
+            inputType = config && config.decimal ? 2 : 4;
         } else if (config && config.decimal) {
             inputType |= 4096 | 8192;
         }
