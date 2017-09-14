@@ -15,6 +15,7 @@ import android.widget.EditText;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.widget.AppCompatEditText;
 import android.support.v7.widget.AppCompatRatingBar;
 import android.support.v7.widget.LinearLayoutCompat;
@@ -45,6 +46,8 @@ public class AlertPlugin extends CordovaPlugin {
             lastAlert = showSheet(args.getJSONObject(0), callbackContext);
         } else if ("showProgress".equals(action)) {
             lastProgress = showProgress(args.getJSONObject(0), callbackContext);
+        } else if ("setNightMode".equals(action)) {
+            setNightMode(args.getBoolean(0), callbackContext);
         } else {
             return false;
         }
@@ -191,15 +194,7 @@ public class AlertPlugin extends CordovaPlugin {
     private ProgressDialog showProgress(JSONObject settings, CallbackContext callbackContext) throws JSONException {
         hideProgress();
 
-        final ProgressDialog progressDlg;
-        int dlgTheme = settings.optInt("theme", 0);
-
-        if (dlgTheme > 0) {
-            progressDlg = new ProgressDialog(cordova.getActivity(), dlgTheme);
-        } else {
-            progressDlg = new ProgressDialog(cordova.getActivity());
-        }
-
+        final ProgressDialog progressDlg = new ProgressDialog(cordova.getActivity(), android.support.v7.appcompat.R.style.Theme_AppCompat_DayNight_Dialog_Alert);
         progressDlg.setTitle(settings.optString("title", ""));
         progressDlg.setMessage(settings.getString("message"));
         progressDlg.setCancelable(true);
@@ -208,16 +203,17 @@ public class AlertPlugin extends CordovaPlugin {
         return progressDlg;
     }
 
+    private void setNightMode(boolean enabled, final CallbackContext callbackContext) throws JSONException {
+        int value = enabled ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO;
+        AppCompatDelegate.setDefaultNightMode(value);
+        // clear cached? instance so the next alert will have right mode
+        createBuilder(new JSONObject()).create();
+
+        callbackContext.success();
+    }
+
     private AlertDialog.Builder createBuilder(JSONObject settings) throws JSONException {
-        AlertDialog.Builder builder;
-        int dlgTheme = settings.optInt("theme", 0);
-
-        if (dlgTheme > 0) {
-            builder = new AlertDialog.Builder(cordova.getActivity(), dlgTheme);
-        } else {
-            builder = new AlertDialog.Builder(cordova.getActivity());
-        }
-
+        AlertDialog.Builder builder = new AlertDialog.Builder(cordova.getActivity(), android.support.v7.appcompat.R.style.Theme_AppCompat_DayNight_Dialog_Alert);
         builder.setTitle(settings.optString("title", ""));
         builder.setCancelable(true);
 

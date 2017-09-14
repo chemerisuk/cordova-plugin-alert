@@ -14,7 +14,6 @@ function AlertBuilder(title, type) {
 AlertBuilder.TYPE_SHEET = "sheet";
 AlertBuilder.TYPE_DIALOG = "dialog";
 AlertBuilder.TYPE_PROGRESS = "progress";
-AlertBuilder.getCurrentTheme = function() { return 0; };
 
 AlertBuilder.prototype = {
     addAction: function(title) {
@@ -82,8 +81,6 @@ AlertBuilder.prototype = {
     show: function(success, error) {
         var methodName = "show" + this.type[0].toUpperCase() + this.type.slice(1);
 
-        this.theme = AlertBuilder.getCurrentTheme();
-
         exec(function(args) {
             if (typeof success === "function") {
                 if (Array.isArray(args)) {
@@ -119,13 +116,7 @@ module.exports = {
         builder.message = message;
         return builder;
     },
-    setTheme: function(theme) {
-        if (typeof theme === "function") {
-            AlertBuilder.getCurrentTheme = theme;
-        } else if (typeof theme === "number") {
-            AlertBuilder.getCurrentTheme = function() { return theme; };
-        } else {
-            throw new TypeError("theme can be only number or a functor");
-        }
+    setNightMode: function(value, success, error) {
+        exec(success, error, PLUGIN_NAME, "setNightMode", [!!value]);
     }
 };
