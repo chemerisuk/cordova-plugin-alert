@@ -91,6 +91,12 @@
                             textField.autocapitalizationType = UITextAutocapitalizationTypeSentences;
                         }
 
+                        NSString *autocorrect = inputSettings[@"autocorrect"] ?: @"";
+                        if ([autocorrect isEqualToString:@"off"]) {
+                            textField.autocorrectionType = UITextAutocorrectionTypeNo;
+                            textField.spellCheckingType = UITextSpellCheckingTypeNo;
+                        }
+
                         textField.text = inputSettings[@"value"];
                         textField.placeholder = inputSettings[@"placeholder"];
                         textField.keyboardType = [inputSettings[@"type"] intValue];

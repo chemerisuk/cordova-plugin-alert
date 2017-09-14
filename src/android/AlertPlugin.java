@@ -268,6 +268,11 @@ public class AlertPlugin extends CordovaPlugin {
             inputType |= InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
         }
 
+        String autocorrect = settings.optString("autocorrect", "");
+        if ("off".equals(autocorrect)) {
+            inputType |= InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
+        }
+
         int maxLength = settings.optInt("maxlength");
         if (maxLength > 0) {
             input.setFilters(new InputFilter[] {new InputFilter.LengthFilter(maxLength)});
