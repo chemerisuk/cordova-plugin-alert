@@ -30,6 +30,7 @@ import org.json.JSONObject;
 
 public class AlertPlugin extends CordovaPlugin {
     private static final String TAG = "AlertPlugin";
+    private static final int THEME = android.support.v7.appcompat.R.style.Theme_AppCompat_DayNight_Dialog_Alert;
 
     private AlertDialog lastAlert;
     private ProgressDialog lastProgress;
@@ -194,7 +195,7 @@ public class AlertPlugin extends CordovaPlugin {
     private ProgressDialog showProgress(JSONObject settings, CallbackContext callbackContext) throws JSONException {
         hideProgress();
 
-        final ProgressDialog progressDlg = new ProgressDialog(cordova.getActivity(), android.support.v7.appcompat.R.style.Theme_AppCompat_DayNight_Dialog_Alert);
+        final ProgressDialog progressDlg = new ProgressDialog(cordova.getActivity(), THEME);
         progressDlg.setTitle(settings.optString("title", ""));
         progressDlg.setMessage(settings.getString("message"));
         progressDlg.setCancelable(true);
@@ -213,7 +214,7 @@ public class AlertPlugin extends CordovaPlugin {
     }
 
     private AlertDialog.Builder createBuilder(JSONObject settings) throws JSONException {
-        AlertDialog.Builder builder = new AlertDialog.Builder(cordova.getActivity(), android.support.v7.appcompat.R.style.Theme_AppCompat_DayNight_Dialog_Alert);
+        AlertDialog.Builder builder = new AlertDialog.Builder(cordova.getActivity(), THEME);
         builder.setTitle(settings.optString("title", ""));
         builder.setCancelable(true);
 

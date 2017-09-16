@@ -40,7 +40,7 @@ xmlns:android="http://schemas.android.com/apk/res/android"
             </feature>
         </config-file>
 
-        <framework src="com.android.support:appcompat-v7:25.+" />
+        <framework src="com.android.support:appcompat-v7:25.2.+" />
 
         <source-file src="src/android/AlertPlugin.java"
             target-dir="src/by/chemerisuk/cordova/" />
