@@ -30,10 +30,10 @@ import org.json.JSONObject;
 
 public class AlertPlugin extends CordovaPlugin {
     private static final String TAG = "AlertPlugin";
-    private static final int THEME = android.support.v7.appcompat.R.style.Theme_AppCompat_DayNight_Dialog_Alert;
 
     private AlertDialog lastAlert;
     private ProgressDialog lastProgress;
+    private int nightMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
@@ -109,8 +109,10 @@ public class AlertPlugin extends CordovaPlugin {
             }
         });
 
-        final AlertDialog alertDialog = dlg.show();
+        final AlertDialog alertDialog = dlg.create();
         alertDialog.setCanceledOnTouchOutside(false);
+        alertDialog.getDelegate().setLocalNightMode(this.nightMode);
+        alertDialog.show();
 
         return alertDialog;
     }
@@ -168,8 +170,10 @@ public class AlertPlugin extends CordovaPlugin {
             }
         });
 
-        final AlertDialog alertDialog = dlg.show();
+        final AlertDialog alertDialog = dlg.create();
         alertDialog.setCanceledOnTouchOutside(false);
+        alertDialog.getDelegate().setLocalNightMode(this.nightMode);
+        alertDialog.show();
 
         if (inputControls.size() > 0) {
             final TextView messageView = (TextView)alertDialog.findViewById(android.R.id.message);
@@ -195,7 +199,7 @@ public class AlertPlugin extends CordovaPlugin {
     private ProgressDialog showProgress(JSONObject settings, CallbackContext callbackContext) throws JSONException {
         hideProgress();
 
-        final ProgressDialog progressDlg = new ProgressDialog(cordova.getActivity(), THEME);
+        final ProgressDialog progressDlg = new ProgressDialog(cordova.getActivity());
         progressDlg.setTitle(settings.optString("title", ""));
         progressDlg.setMessage(settings.getString("message"));
         progressDlg.setCancelable(true);
@@ -205,16 +209,20 @@ public class AlertPlugin extends CordovaPlugin {
     }
 
     private void setNightMode(boolean enabled, final CallbackContext callbackContext) throws JSONException {
-        int value = enabled ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO;
-        AppCompatDelegate.setDefaultNightMode(value);
-        // clear cached? instance so the next alert will have right mode
-        createBuilder(new JSONObject()).create();
+        if (enabled) {
+            this.nightMode = AppCompatDelegate.MODE_NIGHT_YES;
+        } else {
+            this.nightMode = AppCompatDelegate.MODE_NIGHT_NO;
+        }
+        // clear cached? instance so the next alert will have the right colors
+        final AlertDialog alertDialog = createBuilder(new JSONObject()).create();
+        alertDialog.getDelegate().setLocalNightMode(this.nightMode);
 
         callbackContext.success();
     }
 
     private AlertDialog.Builder createBuilder(JSONObject settings) throws JSONException {
-        AlertDialog.Builder builder = new AlertDialog.Builder(cordova.getActivity(), THEME);
+        AlertDialog.Builder builder = new AlertDialog.Builder(cordova.getActivity());
         builder.setTitle(settings.optString("title", ""));
         builder.setCancelable(true);
 
