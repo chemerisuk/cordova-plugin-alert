@@ -118,9 +118,13 @@
 
 - (void)showSheet:(CDVInvokedUrlCommand *)command {
     NSDictionary* options = [command argumentAtIndex:0];
-    NSString *title = options[@"title"];
+    NSString *title = options[@"title"] ?: @"";
     NSArray* items = options[@"options"];
     NSArray* actions = options[@"actions"];
+    
+    if ([title length] == 0) {
+        title = NULL; // fix sheet presentation with blank message
+    }
 
     if (self.lastAlert) {
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Only single alert can be displayed"];
