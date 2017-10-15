@@ -26,93 +26,92 @@
     }
 
     [self hideProgress:^{
-        // [self.commandDelegate runInBackground:^{
-            self.lastAlert = [UIAlertController alertControllerWithTitle:title
-                                                                       message:message
-                                                                preferredStyle:UIAlertControllerStyleAlert];
+        self.lastAlert = [UIAlertController alertControllerWithTitle:title
+                                                                   message:message
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+
+        if (starRatingView) {
+            starRatingView.backgroundColor = [UIColor clearColor];
+            starRatingView.spacing = 15;
+            starRatingView.maximumValue = 5;
+            starRatingView.minimumValue = 0;
+            starRatingView.value = 0;
+
+            [self.lastAlert.view addSubview:starRatingView];
+        }
+
+        void (^actionHandler)() = ^(UIAlertAction *action) {
+            NSMutableArray* result = [[NSMutableArray alloc] init];
+
+            long actionIndex = [actions indexOfObject:action.title] + 1;
+            [result addObject:[NSNumber numberWithLong:actionIndex]];
 
             if (starRatingView) {
-                starRatingView.backgroundColor = [UIColor clearColor];
-                starRatingView.spacing = 15;
-                starRatingView.maximumValue = 5;
-                starRatingView.minimumValue = 0;
-                starRatingView.value = 0;
-
-                [self.lastAlert.view addSubview:starRatingView];
+                [result addObject:[NSNumber numberWithFloat:starRatingView.value]];
             }
 
-            void (^actionHandler)() = ^(UIAlertAction *action) {
-                NSMutableArray* result = [[NSMutableArray alloc] init];
+            for (int j = 0, n = (int)[inputs count]; j < n; ++j) {
+                [result addObject:[[self.lastAlert.textFields objectAtIndex:j] text]];
+            }
 
-                long actionIndex = [actions indexOfObject:action.title] + 1;
-                [result addObject:[NSNumber numberWithLong:actionIndex]];
+            self.lastAlert = NULL;
 
-                if (starRatingView) {
-                    [result addObject:[NSNumber numberWithFloat:starRatingView.value]];
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:result];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        };
+
+        for (int i = 0, n = (int)[actions count]; i < n; ++i) {
+            UIAlertActionStyle actionStyle = i == 1 ? UIAlertActionStyleCancel : UIAlertActionStyleDefault;
+            UIAlertAction *action = [UIAlertAction actionWithTitle:[actions objectAtIndex:i]
+                                                             style:actionStyle
+                                                           handler:actionHandler
+                                    ];
+
+            [self.lastAlert addAction:action];
+            if (i == 0 && n > 1) {
+                // set preferredAction only for iOS9+
+                if ([self.lastAlert respondsToSelector:@selector(setPreferredAction:)]) {
+                    self.lastAlert.preferredAction = action;
                 }
+            }
+        }
 
-                for (int j = 0, n = (int)[inputs count]; j < n; ++j) {
-                    [result addObject:[[self.lastAlert.textFields objectAtIndex:j] text]];
-                }
+        if (inputs) {
+            for (int j = 0, n = (int)[inputs count]; j < n; ++j) {
+                NSDictionary *inputSettings = inputs[j];
 
-                self.lastAlert = NULL;
-
-                CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:result];
-                [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-            };
-
-            for (int i = 0, n = (int)[actions count]; i < n; ++i) {
-                UIAlertActionStyle actionStyle = i == 1 ? UIAlertActionStyleCancel : UIAlertActionStyleDefault;
-                UIAlertAction *action = [UIAlertAction actionWithTitle:[actions objectAtIndex:i]
-                                                                 style:actionStyle
-                                                               handler:actionHandler
-                                        ];
-
-                [self.lastAlert addAction:action];
-                if (i == 0 && n > 1) {
-                    // set preferredAction only for iOS9+
-                    if ([self.lastAlert respondsToSelector:@selector(setPreferredAction:)]) {
-                        self.lastAlert.preferredAction = action;
+                [self.lastAlert addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+                    NSString *autocapitalize = inputSettings[@"autocapitalize"] ?: @"";
+                    if ([autocapitalize isEqualToString:@"words"]) {
+                        textField.autocapitalizationType = UITextAutocapitalizationTypeWords;
+                    } else if ([autocapitalize isEqualToString:@"characters"]) {
+                        textField.autocapitalizationType = UITextAutocapitalizationTypeAllCharacters;
+                    } else if ([autocapitalize isEqualToString:@"sentences"]) {
+                        textField.autocapitalizationType = UITextAutocapitalizationTypeSentences;
                     }
-                }
+
+                    NSString *autocorrect = inputSettings[@"autocorrect"] ?: @"";
+                    if ([autocorrect isEqualToString:@"off"]) {
+                        textField.autocorrectionType = UITextAutocorrectionTypeNo;
+                        textField.spellCheckingType = UITextSpellCheckingTypeNo;
+                    } else if ([autocorrect isEqualToString:@"on"]) {
+                        textField.autocorrectionType = UITextAutocorrectionTypeYes;
+                        textField.spellCheckingType = UITextSpellCheckingTypeYes;
+                    }
+
+                    textField.text = inputSettings[@"value"];
+                    textField.placeholder = inputSettings[@"placeholder"];
+                    textField.keyboardType = [inputSettings[@"type"] intValue];
+                    textField.returnKeyType = j < n - 1 ? UIReturnKeyNext : UIReturnKeyDone;
+
+                    if (theme > 0) {
+                        textField.keyboardAppearance = UIKeyboardAppearanceDark;
+                    }
+                }];
             }
+        }
 
-            if (inputs) {
-                for (int j = 0, n = (int)[inputs count]; j < n; ++j) {
-                    NSDictionary *inputSettings = inputs[j];
-
-                    [self.lastAlert addTextFieldWithConfigurationHandler:^(UITextField *textField) {
-                        NSString *autocapitalize = inputSettings[@"autocapitalize"] ?: @"";
-                        if ([autocapitalize isEqualToString:@"words"]) {
-                            textField.autocapitalizationType = UITextAutocapitalizationTypeWords;
-                        } else if ([autocapitalize isEqualToString:@"characters"]) {
-                            textField.autocapitalizationType = UITextAutocapitalizationTypeAllCharacters;
-                        } else if ([autocapitalize isEqualToString:@"sentences"]) {
-                            textField.autocapitalizationType = UITextAutocapitalizationTypeSentences;
-                        }
-
-                        NSString *autocorrect = inputSettings[@"autocorrect"] ?: @"";
-                        if ([autocorrect isEqualToString:@"off"]) {
-                            textField.autocorrectionType = UITextAutocorrectionTypeNo;
-                            textField.spellCheckingType = UITextSpellCheckingTypeNo;
-                        }
-
-                        textField.text = inputSettings[@"value"];
-                        textField.placeholder = inputSettings[@"placeholder"];
-                        textField.keyboardType = [inputSettings[@"type"] intValue];
-                        textField.returnKeyType = j < n - 1 ? UIReturnKeyNext : UIReturnKeyDone;
-
-                        if (theme > 0) {
-                            textField.keyboardAppearance = UIKeyboardAppearanceDark;
-                        }
-                    }];
-                }
-            }
-
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self.viewController presentViewController:self.lastAlert animated:YES completion:NULL];
-            });
-        // }];
+        [self.getTopPresentedViewController presentViewController:self.lastAlert animated:YES completion:NULL];
     }];
 }
 
@@ -121,7 +120,7 @@
     NSString *title = options[@"title"] ?: @"";
     NSArray* items = options[@"options"];
     NSArray* actions = options[@"actions"];
-    
+
     if ([title length] == 0) {
         title = NULL; // fix sheet presentation with blank message
     }
@@ -134,66 +133,62 @@
     }
 
     [self hideProgress:^{
-        // [self.commandDelegate runInBackground:^{
-            self.lastAlert = [UIAlertController alertControllerWithTitle:NULL
-                                                                 message:title
-                                                          preferredStyle:UIAlertControllerStyleActionSheet];
+        self.lastAlert = [UIAlertController alertControllerWithTitle:NULL
+                                                             message:title
+                                                      preferredStyle:UIAlertControllerStyleActionSheet];
 
-            void (^actionHandler)() = ^(UIAlertAction *action) {
-                NSMutableArray* result = [[NSMutableArray alloc] init];
+        void (^actionHandler)() = ^(UIAlertAction *action) {
+            NSMutableArray* result = [[NSMutableArray alloc] init];
 
-                if (action.style == UIAlertActionStyleCancel) {
-                    [result addObject:[NSNumber numberWithLong:1]];
-                } else {
-                    long actionIndex = [items indexOfObject:action.title] + 1;
-                    [result addObject:[NSNumber numberWithLong:actionIndex]];
-                    [result addObject:action.title];
-                }
-
-                self.lastAlert = NULL;
-
-                CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:result];
-                [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-            };
-
-            if (items) {
-                for (int i = 0, n = (int)[items count]; i < n; ++i) {
-                    [self.lastAlert addAction:[UIAlertAction actionWithTitle:[items objectAtIndex:i]
-                                                                       style:UIAlertActionStyleDefault
-                                                                     handler:actionHandler
-                    ]];
-                }
+            if (action.style == UIAlertActionStyleCancel) {
+                [result addObject:[NSNumber numberWithLong:1]];
+            } else {
+                long actionIndex = [items indexOfObject:action.title] + 1;
+                [result addObject:[NSNumber numberWithLong:actionIndex]];
+                [result addObject:action.title];
             }
 
-            NSString* cancelActionTitle;
-            UIPopoverPresentationController *popover = self.lastAlert.popoverPresentationController;
+            self.lastAlert = NULL;
 
-            if (actions && [actions count] > 0) {
-                // only single cancel button available on iOS
-                cancelActionTitle = [actions objectAtIndex:0];
-            } else if (popover) {
-                // for iPad add fake cancel button (that is invisible)
-                // to handle tap outside and reset internal state
-                cancelActionTitle = @"Cancel";
-            }
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:result];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        };
 
-            if (cancelActionTitle) {
-                [self.lastAlert addAction:[UIAlertAction actionWithTitle:cancelActionTitle
-                                                                   style:UIAlertActionStyleCancel
+        if (items) {
+            for (int i = 0, n = (int)[items count]; i < n; ++i) {
+                [self.lastAlert addAction:[UIAlertAction actionWithTitle:[items objectAtIndex:i]
+                                                                   style:UIAlertActionStyleDefault
                                                                  handler:actionHandler
                 ]];
             }
+        }
 
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (popover) {
-                    popover.permittedArrowDirections = 0;
-                    popover.sourceView = self.webView.superview;
-                    popover.sourceRect = CGRectMake(CGRectGetMidX(self.webView.bounds), CGRectGetMidY(self.webView.bounds), 0, 0);
-                }
+        NSString* cancelActionTitle;
+        UIPopoverPresentationController *popover = self.lastAlert.popoverPresentationController;
 
-                [self.viewController presentViewController:self.lastAlert animated:YES completion:NULL];
-            });
-        // }];
+        if (actions && [actions count] > 0) {
+            // only single cancel button available on iOS
+            cancelActionTitle = [actions objectAtIndex:0];
+        } else if (popover) {
+            // for iPad add fake cancel button (that is invisible)
+            // to handle tap outside and reset internal state
+            cancelActionTitle = @"Cancel";
+        }
+
+        if (cancelActionTitle) {
+            [self.lastAlert addAction:[UIAlertAction actionWithTitle:cancelActionTitle
+                                                               style:UIAlertActionStyleCancel
+                                                             handler:actionHandler
+            ]];
+        }
+
+        if (popover) {
+            popover.permittedArrowDirections = 0;
+            popover.sourceView = self.webView.superview;
+            popover.sourceRect = CGRectMake(CGRectGetMidX(self.webView.bounds), CGRectGetMidY(self.webView.bounds), 0, 0);
+        }
+
+        [self.getTopPresentedViewController presentViewController:self.lastAlert animated:YES completion:NULL];
     }];
 }
 
@@ -210,29 +205,27 @@
     }
 
     [self hideProgress:^{
-        // [self.commandDelegate runInBackground:^{
-            self.lastProgress = [UIAlertController alertControllerWithTitle:title
-                                                                       message:[NSString stringWithFormat:@"%@\n\n\n\n", message]
-                                                                preferredStyle:UIAlertControllerStyleAlert];
+        self.lastProgress = [UIAlertController alertControllerWithTitle:title
+                                                                   message:[NSString stringWithFormat:@"%@\n\n\n\n", message]
+                                                            preferredStyle:UIAlertControllerStyleAlert];
 
-            dispatch_async(dispatch_get_main_queue(), ^{
-                UIActivityIndicatorView* spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-                spinner.color = [UIColor blackColor];
-                spinner.center = CGPointMake(self.lastProgress.view.bounds.size.width / 2,
-                                             self.lastProgress.view.bounds.size.height / 1.4);
-                spinner.autoresizingMask =
-                    UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin |
-                    UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            UIActivityIndicatorView* spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+            spinner.color = [UIColor blackColor];
+            spinner.center = CGPointMake(self.lastProgress.view.bounds.size.width / 2,
+                                         self.lastProgress.view.bounds.size.height / 1.4);
+            spinner.autoresizingMask =
+                UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin |
+                UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
 
-                [spinner startAnimating];
+            [spinner startAnimating];
 
-                [self.lastProgress.view addSubview:spinner];
+            [self.lastProgress.view addSubview:spinner];
 
-                [self.viewController presentViewController:self.lastProgress animated:YES completion:^{
-                   [self.lastProgress.view.superview addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hideProgressOnTap)]];
-                }];
-            });
-        // }];
+            [self.getTopPresentedViewController presentViewController:self.lastProgress animated:YES completion:^{
+               [self.lastProgress.view.superview addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hideProgressOnTap)]];
+            }];
+        });
     }];
 }
 
@@ -264,6 +257,15 @@
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         }
     }];
+}
+
+-(UIViewController *)getTopPresentedViewController {
+    UIViewController *presentingViewController = self.viewController;
+    while(presentingViewController.presentedViewController != nil && ![presentingViewController.presentedViewController isBeingDismissed])
+    {
+        presentingViewController = presentingViewController.presentedViewController;
+    }
+    return presentingViewController;
 }
 
 @end
