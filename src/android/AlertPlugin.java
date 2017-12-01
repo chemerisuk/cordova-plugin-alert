@@ -66,17 +66,12 @@ public class AlertPlugin extends CordovaPlugin {
     private void hide(final CallbackContext callbackContext) {
         hideProgress();
 
-        cordova.getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (lastAlert != null) {
-                    lastAlert.hide();
-                    lastAlert = null;
-                }
+        if (lastAlert != null) {
+            lastAlert.hide();
+            lastAlert = null;
+        }
 
-                callbackContext.success();
-            }
-        });
+        callbackContext.success();
     }
 
     private AlertDialog showSheet(JSONObject settings, final CallbackContext callbackContext) throws JSONException {
@@ -96,7 +91,7 @@ public class AlertPlugin extends CordovaPlugin {
                 JSONArray result = new JSONArray();
                 result.put(which + 1);
                 result.put(optionsArray[which]);
-                sendResult(result, callbackContext);
+                callbackContext.success(result);
             }
         });
 
@@ -105,7 +100,7 @@ public class AlertPlugin extends CordovaPlugin {
             public void onClick(DialogInterface dialog, int which) {
                 JSONArray result = new JSONArray();
                 result.put(-which);
-                sendResult(result, callbackContext);
+                callbackContext.success(result);
             }
         });
 
@@ -166,7 +161,7 @@ public class AlertPlugin extends CordovaPlugin {
                     result.put(textInput.getText());
                 }
 
-                sendResult(result, callbackContext);
+                callbackContext.success(result);
             }
         });
 
@@ -301,14 +296,5 @@ public class AlertPlugin extends CordovaPlugin {
                 dlg.setNeutralButton(title, clickListener);
             }
         }
-    }
-
-    private void sendResult(final JSONArray result, final CallbackContext callbackContext) {
-        cordova.getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                callbackContext.success(result);
-            }
-        });
     }
 }
