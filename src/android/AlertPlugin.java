@@ -105,6 +105,7 @@ public class AlertPlugin extends CordovaPlugin {
         });
 
         final AlertDialog alertDialog = dlg.create();
+        alertDialog.setCancelable(false);
         alertDialog.setCanceledOnTouchOutside(false);
         alertDialog.getDelegate().setLocalNightMode(this.nightMode);
         alertDialog.show();
@@ -166,6 +167,7 @@ public class AlertPlugin extends CordovaPlugin {
         });
 
         final AlertDialog alertDialog = dlg.create();
+        alertDialog.setCancelable(false);
         alertDialog.setCanceledOnTouchOutside(false);
         alertDialog.getDelegate().setLocalNightMode(this.nightMode);
         alertDialog.show();
