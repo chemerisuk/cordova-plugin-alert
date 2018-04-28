@@ -33,6 +33,8 @@ xmlns:android="http://schemas.android.com/apk/res/android"
     </platform>
 
     <platform name="android">
+        <preference name="ANDROID_SUPPORT_VERSION" default="26.+"/>
+
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="Alert">
                 <param name="android-package" value="by.chemerisuk.cordova.AlertPlugin" />
@@ -40,7 +42,7 @@ xmlns:android="http://schemas.android.com/apk/res/android"
             </feature>
         </config-file>
 
-        <framework src="com.android.support:appcompat-v7:26.+" />
+        <framework src="com.android.support:appcompat-v7:$ANDROID_SUPPORT_VERSION" />
 
         <source-file src="src/android/AlertPlugin.java"
             target-dir="src/by/chemerisuk/cordova/" />
