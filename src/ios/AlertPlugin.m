@@ -3,13 +3,16 @@
 
 @implementation AlertPlugin
 
+- (void)pluginInitialize {
+    self.keyboardStyle = UIKeyboardAppearanceDefault;
+}
+
 - (void)showDialog:(CDVInvokedUrlCommand *)command {
     NSDictionary* options = [command argumentAtIndex:0];
     NSString *title = options[@"title"] ?: @"";
     NSString *message = options[@"message"] ?: @"";
     NSArray* actions = options[@"actions"];
     NSArray* inputs = options[@"inputs"];
-    int theme = [options[@"theme"] intValue];
     HCSStarRatingView *starRatingView = NULL;
 
     if (options[@"rating"]) {
@@ -103,10 +106,7 @@
                     textField.placeholder = inputSettings[@"placeholder"];
                     textField.keyboardType = [inputSettings[@"type"] intValue];
                     textField.returnKeyType = j < n - 1 ? UIReturnKeyNext : UIReturnKeyDone;
-
-                    if (theme > 0) {
-                        textField.keyboardAppearance = UIKeyboardAppearanceDark;
-                    }
+                    textField.keyboardAppearance = self.keyboardStyle;
                 }];
             }
         }
@@ -257,6 +257,15 @@
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         }
     }];
+}
+
+- (void)setNightMode:(CDVInvokedUrlCommand *)command {
+    id value = [command.arguments objectAtIndex:0];
+    if ([value boolValue]) {
+        self.keyboardStyle = UIKeyboardAppearanceDark;
+    } else {
+        self.keyboardStyle = UIKeyboardAppearanceLight;
+    }
 }
 
 -(UIViewController *)getTopPresentedViewController {
