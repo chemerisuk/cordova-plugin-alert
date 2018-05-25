@@ -33,7 +33,7 @@ xmlns:android="http://schemas.android.com/apk/res/android"
     </platform>
 
     <platform name="android">
-        <preference name="ANDROID_SUPPORT_VERSION" default="26.+"/>
+        <preference name="ANDROID_SUPPORT_VERSION" default="27.+"/>
 
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="Alert">
