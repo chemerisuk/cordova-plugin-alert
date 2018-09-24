@@ -102,6 +102,13 @@
                         textField.spellCheckingType = UITextSpellCheckingTypeYes;
                     }
 
+                    NSString* autofill = inputSettings[@"autofill"] ?: @"";
+                    if ([autofill isEqualToString:@"one-time-code"]) {
+                        if (@available(iOS 12.0, *)) {
+                            textField.textContentType = UITextContentTypeOneTimeCode;
+                        }
+                    }
+
                     textField.text = inputSettings[@"value"];
                     textField.placeholder = inputSettings[@"placeholder"];
                     textField.keyboardType = [inputSettings[@"type"] intValue];
