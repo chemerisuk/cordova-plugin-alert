@@ -14,11 +14,11 @@ import android.view.WindowManager.LayoutParams;
 import android.widget.EditText;
 import android.widget.RatingBar;
 import android.widget.TextView;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatDelegate;
-import android.support.v7.widget.AppCompatEditText;
-import android.support.v7.widget.AppCompatRatingBar;
-import android.support.v7.widget.LinearLayoutCompat;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.appcompat.widget.AppCompatEditText;
+import androidx.appcompat.widget.AppCompatRatingBar;
+import androidx.appcompat.widget.LinearLayoutCompat;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
