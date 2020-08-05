@@ -43,7 +43,7 @@
             [self.lastAlert.view addSubview:starRatingView];
         }
 
-        void (^actionHandler)() = ^(UIAlertAction *action) {
+        void (^actionHandler)(UIAlertAction*) = ^(UIAlertAction *action) {
             NSMutableArray* result = [[NSMutableArray alloc] init];
 
             long actionIndex = [actions indexOfObject:action.title] + 1;
@@ -82,6 +82,7 @@
         if (inputs) {
             for (int j = 0, n = (int)[inputs count]; j < n; ++j) {
                 NSDictionary *inputSettings = inputs[j];
+                UIKeyboardAppearance keyboardStyle = self.keyboardStyle;
 
                 [self.lastAlert addTextFieldWithConfigurationHandler:^(UITextField *textField) {
                     NSString *autocapitalize = inputSettings[@"autocapitalize"] ?: @"";
@@ -113,7 +114,7 @@
                     textField.placeholder = inputSettings[@"placeholder"];
                     textField.keyboardType = [inputSettings[@"type"] intValue];
                     textField.returnKeyType = j < n - 1 ? UIReturnKeyNext : UIReturnKeyDone;
-                    textField.keyboardAppearance = self.keyboardStyle;
+                    textField.keyboardAppearance = keyboardStyle;
                 }];
             }
         }
@@ -144,7 +145,7 @@
                                                              message:title
                                                       preferredStyle:UIAlertControllerStyleActionSheet];
 
-        void (^actionHandler)() = ^(UIAlertAction *action) {
+        void (^actionHandler)(UIAlertAction*) = ^(UIAlertAction *action) {
             NSMutableArray* result = [[NSMutableArray alloc] init];
 
             if (action.style == UIAlertActionStyleCancel) {
